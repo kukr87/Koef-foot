@@ -55,17 +55,34 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Serve frontend static files
+# ---------- Frontend static files ----------
+# CSS, JS, assets must be served at the same paths as in index.html
 if FRONTEND_DIR.exists():
-    app.mount("/static", StaticFiles(directory=str(FRONTEND_DIR)), name="static")
+    css_dir = FRONTEND_DIR / "css"
+    js_dir = FRONTEND_DIR / "js"
+    assets_dir = FRONTEND_DIR / "assets"
+    if css_dir.exists():
+        app.mount("/css", StaticFiles(directory=str(css_dir)), name="css")
+    if js_dir.exists():
+        app.mount("/js", StaticFiles(directory=str(js_dir)), name="js")
+    if assets_dir.exists():
+        app.mount("/assets", StaticFiles(directory=str(assets_dir)), name="assets")
 
 
 @app.get("/")
 async def root():
     index = FRONTEND_DIR / "index.html"
     if index.exists():
-        return FileResponse(str(index))
+        return FileResponse(str(index), media_type="text/html")
     return {"status": "ok", "message": "Koefi WebApp API"}
+
+
+@app.get("/index.html")
+async def index_html():
+    index = FRONTEND_DIR / "index.html"
+    if index.exists():
+        return FileResponse(str(index), media_type="text/html")
+    raise HTTPException(404, "Not found")
 
 
 # ==================== MODELS ====================
