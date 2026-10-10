@@ -109,6 +109,14 @@ def init_db():
         created_at TEXT
     )""")
 
+    
+    c.execute("""CREATE TABLE IF NOT EXISTS news (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        number     INTEGER,
+        text       TEXT,
+        created_at TEXT
+    )""")
+
     c.execute("""CREATE TABLE IF NOT EXISTS parsed_matches (
         id          INTEGER PRIMARY KEY AUTOINCREMENT,
         name        TEXT,
@@ -118,8 +126,17 @@ def init_db():
         league_id   INTEGER,
         match_time  TEXT DEFAULT '',
         match_date  TEXT,
-        priority    INTEGER DEFAULT 99
+        priority    INTEGER DEFAULT 99,
+        home_logo   TEXT DEFAULT '',
+        away_logo   TEXT DEFAULT ''
     )""")
+
+    # logo columns on matches
+    for col in ("home_logo", "away_logo"):
+        try:
+            c.execute(f"ALTER TABLE matches ADD COLUMN {col} TEXT DEFAULT ''")
+        except Exception:
+            pass
 
     conn.commit()
     conn.close()

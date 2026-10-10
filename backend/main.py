@@ -27,6 +27,7 @@ from database import (
     db_execute, db_fetchone, db_fetchall
 )
 from services.yookassa import create_payment, check_payment, process_successful_payment
+from services import parser as match_parser
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
 logger = logging.getLogger("koefi-webapp")
@@ -115,6 +116,9 @@ class PremiumGrant(BaseModel):
     user_id: int
     days: int = 30
 
+class NewsCreate(BaseModel):
+    text: str
+
 
 # ==================== BACKGROUND ====================
 
@@ -186,6 +190,8 @@ async def api_me(user=Depends(get_current_user)):
         "is_admin": is_admin(uid),
         "ref_link": f"https://t.me/{BOT_USERNAME}?start=ref_{uid}",
         "premium_price": PREMIUM_PRICE,
+        "photo_url": user.get("photo_url") or "",
+        "channel_url": "https://t.me/koefchat",
     }
 
 
@@ -235,8 +241,11 @@ async def api_matches(user=Depends(get_current_user)):
     groups = {}
     for r in rows:
         key = f"{r['country']}|{r['league']}"
+        hl = r["home_logo"] if "home_logo" in r.keys() else ""
+        al = r["away_logo"] if "away_logo" in r.keys() else ""
         groups.setdefault(key, []).append({
             "id": r["id"], "name": r["name"], "match_time": r["match_time"] or "",
+            "home_logo": hl or "", "away_logo": al or "",
         })
 
     sorted_keys = sorted(groups.keys(), key=lambda k: _sort_key(*k.split("|", 1)))
@@ -267,15 +276,19 @@ async def api_match_detail(match_id: int, user=Depends(get_current_user)):
         "SELECT 1 FROM favorites WHERE user_id = ? AND match_id = ?",
         (user["id"], match_id)
     )
+    hl = row["home_logo"] if "home_logo" in row.keys() else ""
+    al = row["away_logo"] if "away_logo" in row.keys() else ""
     return {
         "id": row["id"],
         "name": row["name"],
         "country": row["country"],
         "league": row["league"],
-        "flag": get_flag(row["country"]),
+        "flag": get_flag(row["country"] or ""),
         "match_time": row["match_time"] or "",
         "text": row["text"] or "",
         "is_favorite": bool(fav),
+        "home_logo": hl or "",
+        "away_logo": al or "",
     }
 
 
@@ -596,6 +609,107 @@ async def admin_logs(user=Depends(get_current_user)):
         "SELECT admin_id, action, details, created_at FROM admin_log ORDER BY id DESC LIMIT 30"
     )
     return {"logs": [dict(r) for r in rows]}
+
+
+# ==================== NEWS ====================
+
+@app.get("/api/news")
+async def api_news(user=Depends(get_current_user)):
+    rows = await db_fetchall("SELECT id, number, text, created_at FROM news ORDER BY number DESC, id DESC LIMIT 50")
+    return {
+        "items": [
+            {
+                "id": r["id"],
+                "number": r["number"],
+                "text": r["text"],
+                "created_at": r["created_at"],
+            }
+            for r in rows
+        ]
+    }
+
+
+@app.post("/api/admin/news")
+async def admin_create_news(body: NewsCreate, user=Depends(get_current_user)):
+    require_admin(user)
+    if not body.text.strip():
+        raise HTTPException(400, "Empty news text")
+    max_row = await db_fetchone("SELECT MAX(number) as m FROM news")
+    num = (max_row["m"] or 0) + 1 if max_row else 1
+    now = datetime.now(tz).strftime("%Y-%m-%d %H:%M")
+    await db_execute(
+        "INSERT INTO news (number, text, created_at) VALUES (?, ?, ?)",
+        (num, body.text.strip(), now)
+    )
+    await log_admin_action(user["id"], "add_news", f"#{num}")
+    return {"ok": True, "number": num}
+
+
+@app.delete("/api/admin/news/{news_id}")
+async def admin_delete_news(news_id: int, user=Depends(get_current_user)):
+    require_admin(user)
+    await db_execute("DELETE FROM news WHERE id = ?", (news_id,))
+    await log_admin_action(user["id"], "delete_news", str(news_id))
+    return {"ok": True}
+
+
+@app.get("/api/admin/news")
+async def admin_list_news(user=Depends(get_current_user)):
+    require_admin(user)
+    rows = await db_fetchall("SELECT id, number, text, created_at FROM news ORDER BY number DESC")
+    return {"items": [dict(r) for r in rows]}
+
+
+# ==================== PARSER ====================
+
+@app.post("/api/admin/parser/fetch")
+async def admin_parser_fetch(date: str = Query(...), user=Depends(get_current_user)):
+    require_admin(user)
+    if not date:
+        raise HTTPException(400, "date required YYYY-MM-DD")
+    matches = await match_parser.fetch_matches_from_api(date)
+    if not matches:
+        return {"ok": False, "count": 0, "message": "Нет матчей на эту дату"}
+    leagues = await match_parser.fetch_leagues_from_api()
+    await match_parser.save_parsed_to_temp(matches, date, leagues)
+    total = await db_fetchone("SELECT COUNT(*) as c FROM parsed_matches")
+    await log_admin_action(user["id"], "parser_fetch", f"{date}: {total['c'] if total else 0}")
+    return {"ok": True, "count": total["c"] if total else 0}
+
+
+@app.get("/api/admin/parser/list")
+async def admin_parser_list(page: int = 0, user=Depends(get_current_user)):
+    require_admin(user)
+    return await match_parser.list_parsed(page=page)
+
+
+@app.get("/api/admin/parser/leagues")
+async def admin_parser_leagues(user=Depends(get_current_user)):
+    require_admin(user)
+    return {"leagues": await match_parser.list_parsed_leagues()}
+
+
+@app.post("/api/admin/parser/add")
+async def admin_parser_add(
+    parsed_id: Optional[int] = None,
+    league_id: Optional[int] = None,
+    all_matches: bool = False,
+    user=Depends(get_current_user)
+):
+    require_admin(user)
+    if parsed_id:
+        count = await match_parser.move_parsed_to_matches(parsed_id=parsed_id)
+    elif league_id:
+        count = await match_parser.move_parsed_to_matches(league_id=league_id)
+    elif all_matches:
+        count = await match_parser.move_parsed_to_matches(limit=80)
+        await db_execute("DELETE FROM parsed_matches")
+    else:
+        raise HTTPException(400, "Specify parsed_id, league_id or all_matches")
+    await log_admin_action(user["id"], "parser_add", f"count={count}")
+    return {"ok": True, "count": count}
+
+
 
 
 if __name__ == "__main__":
