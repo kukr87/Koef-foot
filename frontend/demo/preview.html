@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Koefi Preview</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <style>
+    body { overflow: auto; }
+    #app { min-height: 100vh; height: auto; }
+    .main { padding-bottom: 90px; }
+    .preview-tabs {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+      display: flex; gap: 4px; padding: 8px; background: #06090e;
+      overflow-x: auto; border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .preview-tabs button {
+      flex-shrink: 0; padding: 8px 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);
+      background: #182029; color: #a8b8c8; font-size: 12px; font-weight: 600; cursor: pointer;
+      font-family: Inter, sans-serif;
+    }
+    .preview-tabs button.active { background: #0d7a3a; color: #fff; border-color: #16a34a; }
+    .screen { display: none; padding-top: 48px; }
+    .screen.active { display: block; }
+  </style>
+</head>
+<body>
+  <div class="preview-tabs">
+    <button class="active" onclick="show('home')">Главная</button>
+    <button onclick="show('matches')">Матчи</button>
+    <button onclick="show('express')">Экспресс</button>
+    <button onclick="show('account')">Аккаунт</button>
+    <button onclick="show('premium')">Premium</button>
+  </div>
+
+  <div id="app">
+    <header class="header">
+      <div class="header-title"><div class="logo">⚽</div><span id="ht">Koefi</span></div>
+      <div class="header-badge premium" id="badge">⭐ Premium</div>
+    </header>
+
+    <!-- HOME -->
+    <div class="screen active" id="s-home">
+      <main class="main">
+        <div class="page">
+          <div class="greeting">
+            <h1>☀️ Доброе утро, Алексей!</h1>
+            <p>Я твой помощник в мире футбола — собираю статистику, анализирую и даю наиболее вероятные исходы.</p>
+          </div>
+          <div class="welcome-banner">
+            <h3>🎁 Test Drive активирован!</h3>
+            <p>30 дней Premium бесплатно до 2026-11-09. Оцените все возможности без ограничений.</p>
+          </div>
+          <div class="stat-grid">
+            <div class="stat-item"><div class="value">∞</div><div class="label">Матчей сегодня</div></div>
+            <div class="stat-item"><div class="value">47</div><div class="label">В базе</div></div>
+            <div class="stat-item"><div class="value">12</div><div class="label">Дней с нами</div></div>
+            <div class="stat-item"><div class="value">⭐</div><div class="label">Premium</div></div>
+          </div>
+          <button class="btn btn-primary">⚽ Смотреть матчи</button>
+          <button class="btn btn-outline mt-8">⚡ Экспресс дня</button>
+        </div>
+      </main>
+    </div>
+
+    <!-- MATCHES -->
+    <div class="screen" id="s-matches">
+      <main class="main">
+        <div class="page">
+          <div class="group-header"><span class="flag">🏴󠁧󠁢󠁥󠁮󠁧󠁿</span><span>England — Premier League</span><span class="text-muted">(3)</span></div>
+          <div class="match-row"><span class="match-time">15:30</span><div><div class="match-name">Arsenal — Chelsea</div><div class="match-league">Premier League</div></div></div>
+          <div class="match-row"><span class="match-time">18:00</span><div><div class="match-name">Liverpool — Man City</div><div class="match-league">Premier League</div></div></div>
+          <div class="match-row"><span class="match-time">20:45</span><div><div class="match-name">Tottenham — Newcastle</div><div class="match-league">Premier League</div></div></div>
+          <div class="group-header"><span class="flag">🇪🇸</span><span>Spain — La Liga</span><span class="text-muted">(2)</span></div>
+          <div class="match-row"><span class="match-time">17:15</span><div><div class="match-name">Real Madrid — Barcelona</div><div class="match-league">La Liga</div></div></div>
+          <div class="match-row"><span class="match-time">22:00</span><div><div class="match-name">Atletico — Sevilla</div><div class="match-league">La Liga</div></div></div>
+          <div class="group-header"><span class="flag">🇷🇺</span><span>Russia — РПЛ</span><span class="text-muted">(1)</span></div>
+          <div class="match-row"><span class="match-time">19:00</span><div><div class="match-name">Спартак — Зенит</div><div class="match-league">РПЛ</div></div></div>
+        </div>
+      </main>
+    </div>
+
+    <!-- EXPRESS -->
+    <div class="screen" id="s-express">
+      <main class="main">
+        <div class="page">
+          <div class="express-card">
+            <div class="express-pick">
+              <div class="fw-600">⚽ Arsenal — Chelsea</div>
+              <div class="text-muted" style="font-size:12px;margin-top:2px">🏴󠁧󠁢󠁥󠁮󠁧󠁿 England — Premier League</div>
+              <div class="pred">⚡ Прогноз: П1</div>
+              <div class="coef">🎯 кф. 1.85</div>
+            </div>
+            <div class="express-pick">
+              <div class="fw-600">⚽ Real Madrid — Barcelona</div>
+              <div class="text-muted" style="font-size:12px;margin-top:2px">🇪🇸 Spain — La Liga</div>
+              <div class="pred">⚡ Прогноз: ТБ 2.5</div>
+              <div class="coef">🎯 кф. 1.72</div>
+            </div>
+            <div class="express-pick">
+              <div class="fw-600">⚽ Bayern — Dortmund</div>
+              <div class="text-muted" style="font-size:12px;margin-top:2px">🇩🇪 Germany — Bundesliga</div>
+              <div class="pred">⚡ Прогноз: Обе забьют</div>
+              <div class="coef">🎯 кф. 1.55</div>
+            </div>
+            <div class="express-total">👑 Общий коэффициент: 4.93</div>
+          </div>
+          <div class="section-title">📊 Статистика</div>
+          <div class="stat-grid">
+            <div class="stat-item"><div class="value">28</div><div class="label">Всего</div></div>
+            <div class="stat-item"><div class="value text-green">19</div><div class="label">Заходов</div></div>
+            <div class="stat-item"><div class="value">67.9%</div><div class="label">Винрейт</div></div>
+            <div class="stat-item"><div class="value text-green">+24.3%</div><div class="label">ROI</div></div>
+          </div>
+          <div class="section-title">📋 Прошедшие прогнозы</div>
+          <div class="card">
+            <div class="history-item">
+              <div><span class="fw-600">Тройник</span><span class="text-muted"> · 2026-10-09</span>
+                <div class="text-gold" style="font-size:12px">кф. 5.12</div></div>
+              <span class="badge-win">✅ Зашёл</span>
+            </div>
+            <div class="history-item">
+              <div><span class="fw-600">Двойник</span><span class="text-muted"> · 2026-10-08</span>
+                <div class="text-gold" style="font-size:12px">кф. 2.41</div></div>
+              <span class="badge-lose">❌ Мимо</span>
+            </div>
+            <div class="history-item">
+              <div><span class="fw-600">Тройник</span><span class="text-muted"> · 2026-10-07</span>
+                <div class="text-gold" style="font-size:12px">кф. 4.88</div></div>
+              <span class="badge-win">✅ Зашёл</span>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- ACCOUNT -->
+    <div class="screen" id="s-account">
+      <main class="main">
+        <div class="page">
+          <div class="profile-card">
+            <div class="avatar">⚽</div>
+            <div class="profile-name">Алексей</div>
+            <div class="profile-id">ID: 482910375</div>
+          </div>
+          <div class="card">
+            <div class="info-row"><span class="label">Тариф</span><span class="value">⭐ Premium</span></div>
+            <div class="info-row"><span class="label">Действует до</span><span class="value text-gold">2026-11-09</span></div>
+            <div class="info-row"><span class="label">Матчей сегодня</span><span class="value">∞</span></div>
+            <div class="info-row"><span class="label">С нами с</span><span class="value">2026-09-28</span></div>
+            <div class="info-row"><span class="label">Дней в проекте</span><span class="value">12</span></div>
+            <div class="info-row"><span class="label">Пользователей</span><span class="value">1 847</span></div>
+          </div>
+          <button class="btn btn-outline">⭐ Избранное (5)</button>
+          <button class="btn btn-outline mt-8">🔗 Реферальная ссылка (3)</button>
+          <button class="btn btn-outline mt-8">✉️ Техподдержка</button>
+        </div>
+      </main>
+    </div>
+
+    <!-- PREMIUM -->
+    <div class="screen" id="s-premium">
+      <main class="main">
+        <div class="page">
+          <div class="profile-card mt-12">
+            <div style="font-size:44px;margin-bottom:8px">⭐</div>
+            <div class="profile-name">Premium</div>
+            <p class="text-muted mt-8" style="font-size:13px;line-height:1.5">
+              Безлимитные матчи<br>Доступ к экспрессам<br>Полная статистика
+            </p>
+            <div class="text-gold fw-600 mt-12" style="font-size:32px">300 ₽</div>
+            <div class="text-muted" style="font-size:12px">на 30 дней</div>
+          </div>
+          <button class="btn btn-gold">💳 Оплатить 300 ₽</button>
+          <p class="text-center text-muted mt-12" style="font-size:12px">Оплата через ЮKassa · Безопасно</p>
+        </div>
+      </main>
+    </div>
+
+    <nav class="bottom-nav">
+      <button class="nav-item active" data-s="home">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg>
+        <span>Главная</span>
+      </button>
+      <button class="nav-item" data-s="matches">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/><path d="M2 12h20"/></svg>
+        <span>Матчи</span>
+      </button>
+      <button class="nav-item" data-s="express">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        <span>Экспресс</span>
+      </button>
+      <button class="nav-item" data-s="account">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>Аккаунт</span>
+      </button>
+    </nav>
+  </div>
+  <script>
+    function show(id) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById('s-' + id).classList.add('active');
+      document.querySelectorAll('.preview-tabs button').forEach((b,i) => {
+        b.classList.toggle('active', b.textContent.toLowerCase().includes(
+          {home:'главная',matches:'матчи',express:'экспресс',account:'аккаунт',premium:'premium'}[id]
+        ));
+      });
+      document.querySelectorAll('.nav-item').forEach(n => {
+        n.classList.toggle('active', n.dataset.s === id || (id==='premium' && n.dataset.s==='account'));
+      });
+      const titles = {home:'Koefi',matches:'Матчи',express:'Экспресс дня',account:'Аккаунт',premium:'Premium'};
+      document.getElementById('ht').textContent = titles[id] || 'Koefi';
+    }
+    document.querySelectorAll('.nav-item').forEach(n => {
+      n.addEventListener('click', () => show(n.dataset.s));
+    });
+    // support ?screen= for screenshots
+    const sp = new URLSearchParams(location.search).get('screen');
+    if (sp) show(sp);
+  </script>
+</body>
+</html>
